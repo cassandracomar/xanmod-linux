@@ -606,7 +606,7 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
 	 * having to remove and re-insert us on the wait queue.
 	 */
 	for (;;) {
-		prepare_to_wait_exclusive(sk_sleep(sk), &wait,
+		prepare_to_wait_exclusive_lifo(sk_sleep(sk), &wait,
 					  TASK_INTERRUPTIBLE);
 		release_sock(sk);
 		if (reqsk_queue_empty(&icsk->icsk_accept_queue))
@@ -1224,9 +1224,6 @@ int inet_csk_listen_start(struct sock *sk)
 
 	sk->sk_ack_backlog = 0;
 	inet_csk_delack_init(sk);
-
-	if (sk->sk_txrehash == SOCK_TXREHASH_DEFAULT)
-		sk->sk_txrehash = READ_ONCE(sock_net(sk)->core.sysctl_txrehash);
 
 	/* There is race window here: we announce ourselves listening,
 	 * but this transition is still not validated by get_port().
